@@ -5,11 +5,15 @@ import akka.actor.{Actor, ActorLogging}
 import scala.concurrent.duration._
 
 object Altimeter {
+  def apply() = new Altimeter with ProductionEventSource
+
   case class RateChange(amount: Float)
   case class AltimeterUpdate(altitude: Double)
 }
 
-class Altimeter extends Actor with ActorLogging with EventSource {
+class Altimeter extends Actor with ActorLogging {
+  this: EventSource =>
+
   import Altimeter._
   implicit val ec = context.dispatcher
 

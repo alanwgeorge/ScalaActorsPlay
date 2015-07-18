@@ -1,5 +1,6 @@
 package com.alangeorge.scala.actorplay.avionics
 
+import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef}
 import com.alangeorge.scala.actorplay.avionics.EventSource.{UnregisterListener, RegisterListener}
 
@@ -8,7 +9,14 @@ object EventSource {
   case class UnregisterListener(listener: ActorRef)
 }
 
-trait EventSource {this: Actor =>
+trait EventSource {
+  def sendEvent[T](event: T): Unit
+  def eventSourceReceive: Receive
+}
+
+trait ProductionEventSource extends EventSource {
+  this: Actor =>
+
   var listeners = Vector.empty[ActorRef]
 
   def sendEvent[T](event: T): Unit = listeners.foreach(_ ! event)
@@ -18,4 +26,6 @@ trait EventSource {this: Actor =>
     case UnregisterListener(listener) => listeners = listeners filter {_ != listener}
   }
 }
+
+
 
