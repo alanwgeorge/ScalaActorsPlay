@@ -13,6 +13,7 @@ class Altimeter extends Actor with ActorLogging with EventSource {
   import Altimeter._
   implicit val ec = context.dispatcher
 
+  // rates are per minute
   val ceiling = 43000
   val maxRateOfClimb = 5000
   var rateOfClimb = 0f
