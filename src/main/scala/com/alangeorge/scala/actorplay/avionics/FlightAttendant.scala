@@ -1,6 +1,6 @@
 package com.alangeorge.scala.actorplay.avionics
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor._
 import scala.concurrent.duration._
 
 trait AttendantResponsiveness {
@@ -24,3 +24,4 @@ class FlightAttendant extends Actor with ActorLogging {
     case GetDrink(drinkname) => log.debug(s"FlightAttendant GetDrink({})", drinkname); context.system.scheduler.scheduleOnce(responseDuration, sender(), Drink(drinkname))
   }
 }
+

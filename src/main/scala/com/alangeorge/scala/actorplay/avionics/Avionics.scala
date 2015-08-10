@@ -15,16 +15,16 @@ object Avionics {
   def main(args: Array[String]) {
     val control = Await.result((plane ? Plane.GiveMeControl).mapTo[ActorRef], 5 seconds)
     system.scheduler.scheduleOnce(200.millis) {
-      control ! ControlSerfaces.StickBack(1f)
+      control ! ControlSurfaces.StickBack(1f)
     }
     system.scheduler.scheduleOnce(3.seconds) {
-      control ! ControlSerfaces.StickBack(0f)
+      control ! ControlSurfaces.StickBack(0f)
     }
     system.scheduler.scheduleOnce(5.seconds) {
-      control ! ControlSerfaces.StickBack(0.5f)
+      control ! ControlSurfaces.StickBack(0.5f)
     }
     system.scheduler.scheduleOnce(10.seconds) {
-      control ! ControlSerfaces.StickBack(0f)
+      control ! ControlSurfaces.StickBack(0f)
     }
     system.scheduler.scheduleOnce(15.seconds) {
       system.shutdown()
