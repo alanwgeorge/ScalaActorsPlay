@@ -1,6 +1,9 @@
 package com.alangeorge.scala.actorplay.avionics
 
-import akka.actor.{ActorLogging, ActorNotFound, Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 import scala.util.{Failure, Success}
 
@@ -17,6 +20,8 @@ class Pilot extends Actor with ActorLogging {
   var copilot: ActorRef = context.system.deadLetters
   var autopilot: ActorRef = context.system.deadLetters
   val copilotName = context.system.settings.config.getString("com.alangeorge.scala.actorplay.avionics.flightcrew.copilotName")
+  implicit val timeout = Timeout(2 seconds)
+  implicit val ec = context.dispatcher
 
   override def receive: Actor.Receive = {
     case ReadyToGo =>
@@ -26,7 +31,11 @@ class Pilot extends Actor with ActorLogging {
         case Success(cp) => copilot = cp
         case Failure(e) => throw e
       }
-      autopilot = context.actorFor("../Autopilot")
+//      autopilot = context.actorFor("../Autopilot")
+      context.actorSelection("../Autopilot").resolveOne().onComplete {
+        case Success(cp) => autopilot = cp
+        case Failure(e) => throw e
+      }
     case Controls(controlSurfaces) =>
       controls = controlSurfaces
   }
@@ -39,11 +48,22 @@ class Copilot extends Actor {
   var pilot: ActorRef = context.system.deadLetters
   var autopilot: ActorRef = context.system.deadLetters
   val pilotName = context.system.settings.config.getString("com.alangeorge.scala.actorplay.avionics.flightcrew.pilotName")
+  implicit val timeout: Timeout = Timeout(2 seconds)
+  implicit val ec = context.dispatcher
 
   override def receive: Actor.Receive = {
     case ReadyToGo =>
-      pilot = context.actorFor("../" + pilotName)
-      autopilot = context.actorFor("../Autopilot")
+//      pilot = context.actorFor("../" + pilotName)
+      context.actorSelection("../" + pilotName).resolveOne().onComplete {
+        case Success(cp) => pilot = cp
+        case Failure(e) => throw e
+      }
+
+//      autopilot = context.actorFor("../Autopilot")
+      context.actorSelection("../Autopilot").resolveOne().onComplete {
+        case Success(cp) => autopilot = cp
+        case Failure(e) => throw e
+      }
   }
 }
 
