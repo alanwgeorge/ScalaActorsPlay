@@ -11,7 +11,7 @@ import scala.concurrent.Await
 class AltimeterSpec extends TestKit(ActorSystem("AltimeterSpec")) with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll {
   import Altimeter._
 
-  override protected def afterAll(): Unit = system.shutdown()
+  override protected def afterAll(): Unit = system.terminate()
 
   class Helper {
     object EventSourceSpy { val latch = TestLatch(1) }
@@ -49,7 +49,7 @@ class AltimeterSpec extends TestKit(ActorSystem("AltimeterSpec")) with ImplicitS
     "send events" in new Helper {
       val (_, real) = actor()
       Await.ready(EventSourceSpy.latch, 1.second)
-      EventSourceSpy.latch.isOpen should be (true)
+      EventSourceSpy.latch.isOpen should be (right = true)
     }
   }
 }

@@ -1,5 +1,6 @@
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
 import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
@@ -18,3 +19,7 @@ f.onComplete {
 Await.result(f, 10 seconds)
 
 f.isCompleted
+
+import java.util._
+
+println(new Locale("ES"))

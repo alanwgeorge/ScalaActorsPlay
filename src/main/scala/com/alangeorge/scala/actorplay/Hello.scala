@@ -1,19 +1,21 @@
 package com.alangeorge.scala.actorplay
 
 import akka.actor._
-import akka.pattern.gracefulStop
-import akka.pattern.ask
+import akka.pattern.{ask, gracefulStop}
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.Timeout
 import com.google.gson.Gson
-import net.liftweb.json._
-import net.liftweb.json.Serialization.write
-import net.liftweb.json.JsonDSL._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+//import net.liftweb.json._
+//import net.liftweb.json.Serialization.write
+//import net.liftweb.json.JsonDSL._
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.language.postfixOps
-import scala.util.{Failure, Success, Random}
+import scala.util.{Failure, Random, Success}
 
 // Hello
 class HelloActor(name: String) extends Actor {
@@ -31,7 +33,7 @@ object HelloMain extends App {
   helloActor ! "hello"
   helloActor ! "buenos dias"
 
-  system.shutdown()
+  system.terminate()
 }
 
 // Ping Pong
@@ -126,7 +128,7 @@ object LifecycleDemo extends App {
   system.stop(kenny)
 
   println("shutting down system")
-  system.shutdown()
+  system.terminate()
 }
 
 
@@ -173,7 +175,7 @@ object ParentChildDemo extends App {
   println("jonathan was killed")
 
   Thread.sleep(5000)
-  actorSystem.shutdown()
+  actorSystem.terminate()
 }
 
 
@@ -197,7 +199,7 @@ object GracefulStopTest extends App {
   } catch {
     case e:Exception => e.printStackTrace()
   } finally {
-    system.shutdown()
+    system.terminate()
   }
 }
 
@@ -223,7 +225,7 @@ object KillTest extends App {
   number5 ! "hello"
   // send the Kill message
   number5 ! Kill
-  system.shutdown()
+  system.terminate()
 }
 
 
@@ -253,7 +255,7 @@ object DeathWatchTest extends App {
 
   Thread.sleep(5000)
   println("calling system.shutdown")
-  system.shutdown()
+  system.terminate()
 }
 
 // Futures1
@@ -372,7 +374,7 @@ object AskTest extends App {
   val result2 = Await.result(future2, 1 second)
   println(result2)
 
-  system.shutdown()
+  system.terminate()
 }
 
 
@@ -412,7 +414,7 @@ object BecomeHulkExample extends App {
   davidBanner ! BadGuysMakeMeAngry
   Thread.sleep(1000)
   davidBanner ! ActNormalMessage
-  system.shutdown()
+  system.terminate()
 }
 
 
@@ -431,45 +433,71 @@ object GsonTest extends App {
   println(p2)
 }
 
+object SprayJsonTest extends App {
+  import spray.json._
+  import DefaultJsonProtocol._
 
-// Lift Web
-object LiftJsonTest extends App {
-  val p = Person("Alvin Alexander", Address2("Talkeetna", "AK"))
+  val address = Address2("san francisco", "ca")
+  val person = Person("alan george", address)
 
-  // create a JSON string from the Person, then print it
-  implicit val formats = DefaultFormats
-  val jsonString = write(p)
-  println(jsonString)
+  implicit val personFormat= jsonFormat2(Address2)
+  implicit val addressFormat = jsonFormat2(Person)
+
+  println(person.toJson.prettyPrint)
 }
 
-case class Person2(name: String, address: Address2) {
-  var friends = List[Person2]()
+
+object FlowTest extends App {
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val executor: ExecutionContextExecutor = system.dispatcher
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+  val source: Source[Int, Unit] = Source(1 to 10)
+  val sink: Sink[Int, Future[Int]] = Sink.fold[Int,Int](0)(_ + _)
+  val sum: Future[Int] = source.runWith(sink)
+
+  val result: Int = Await.result(sum, 1 second)
+  println(result)
 }
 
-object LiftJsonListsVersion1 extends App {
-  //import net.liftweb.json.JsonParser._
-  val formats = DefaultFormats
-
-  val merc = Person2("Mercedes", Address2("Somewhere", "KY"))
-  val mel = Person2("Mel", Address2("Lake Zurich", "IL"))
-  val friends = List(merc, mel)
-  val p = Person2("Alvin Alexander", Address2("Talkeetna", "AK"))
-  p.friends = friends
-
-  // define the json output
-  val json =
-    "person" ->
-      ("name" -> p.name) ~
-        ("address" ->
-          ("city" -> p.address.city) ~
-            ("state" -> p.address.state)) ~
-        ("friends" ->
-          friends.map { f =>
-            ("name" -> f.name) ~
-              ("address" ->
-                ("city" -> f.address.city) ~
-                  ("state" -> f.address.state))
-          })
-
-  println(pretty(render(json)))
-}
+//// Lift Web
+//object LiftJsonTest extends App {
+//  val p = Person("Alvin Alexander", Address2("Talkeetna", "AK"))
+//
+//  // create a JSON string from the Person, then print it
+//  implicit val formats = DefaultFormats
+//  val jsonString = write(p)
+//  println(jsonString)
+//}
+//
+//case class Person2(name: String, address: Address2) {
+//  var friends = List[Person2]()
+//}
+//
+//object LiftJsonListsVersion1 extends App {
+//  //import net.liftweb.json.JsonParser._
+//  val formats = DefaultFormats
+//
+//  val merc = Person2("Mercedes", Address2("Somewhere", "KY"))
+//  val mel = Person2("Mel", Address2("Lake Zurich", "IL"))
+//  val friends = List(merc, mel)
+//  val p = Person2("Alvin Alexander", Address2("Talkeetna", "AK"))
+//  p.friends = friends
+//
+//  // define the json output
+//  val json =
+//    "person" ->
+//      ("name" -> p.name) ~
+//        ("address" ->
+//          ("city" -> p.address.city) ~
+//            ("state" -> p.address.state)) ~
+//        ("friends" ->
+//          friends.map { f =>
+//            ("name" -> f.name) ~
+//              ("address" ->
+//                ("city" -> f.address.city) ~
+//                  ("state" -> f.address.state))
+//          })
+//
+//  println(pretty(render(json)))
+//}

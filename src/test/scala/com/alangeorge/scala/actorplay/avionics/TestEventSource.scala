@@ -11,7 +11,7 @@ class TestEventSource extends Actor with ProductionEventSource {
 class EventSourceSpec extends TestKit(ActorSystem("EventSourceSpec")) with WordSpecLike with Matchers with BeforeAndAfterAll {
   import EventSource._
 
-  override protected def afterAll(): Unit = system.shutdown()
+  override protected def afterAll(): Unit = system.terminate()
 
   "EventSource" should {
     "allow us to register a listener" in {
