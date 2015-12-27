@@ -1,7 +1,7 @@
 package com.alangeorge.scala.futuresplay
 
 import org.scalatest.{Matchers, WordSpec}
-import Stream.cons
+
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
@@ -14,8 +14,9 @@ class MultiExecContextSpec extends WordSpec with Matchers {
   "Future" should {
     "calculate fibonacci numbers" in {
       import java.util.concurrent.Executors
+
       import scala.concurrent.duration._
-      import scala.concurrent.{ExecutionContext, Future, Await}
+      import scala.concurrent.{Await, ExecutionContext, Future}
 
       val execService = Executors.newCachedThreadPool()
       implicit val execContext = ExecutionContext.fromExecutorService(execService)

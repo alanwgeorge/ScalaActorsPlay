@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
-import scala.language.postfixOps
+import scala.language.{implicitConversions, postfixOps}
 import scala.util.Random
 
 trait Animal {
@@ -23,17 +23,23 @@ class Cat extends Animal {
 }
 
 class AnimalApi extends LazyLogging {
+  import AnimalApi._
   def execute: Future[Animal] = {
     val promise = Promise[Animal]
     val f = Future[Int] {
-      val i = Random.nextInt(5000)
+      val i = Random.nextInt(MAX_SLEEP)
       logger.info(s"sleeping $i")
-      Thread.sleep(i)
+      sleep(i)
       i
     }
     f.map { i => if (i % 10 == 0) promise.success(new Cat) else promise.success(new Dog)}
     promise.future
   }
+}
+object AnimalApi {
+  val MAX_SLEEP: Duration = 5 seconds
+
+  implicit def durationToInt(d: Duration): Int = d.toMillis.toInt
 }
 
 trait FishingQueue[T] {
@@ -68,6 +74,7 @@ trait FishingQueue[T] {
 
 object Fishing extends FishingQueue[Option[Animal]] with LazyLogging {
   def main(args: Array[String]) {
+    import AnimalApi._
 
     val api = new AnimalApi
 
@@ -88,7 +95,7 @@ object Fishing extends FishingQueue[Option[Animal]] with LazyLogging {
       case None => false
     }
 
-    val fish = fishForMessage(6 seconds)(catsOnly)
+    val fish = fishForMessage(MAX_SLEEP + (1 second))(catsOnly)
 
     logger.info(s"caught fish $fish")
   }
