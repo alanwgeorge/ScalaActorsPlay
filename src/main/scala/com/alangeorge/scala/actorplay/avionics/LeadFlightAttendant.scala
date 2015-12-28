@@ -46,5 +46,5 @@ object FlightAttendantPathChecker extends App {
   val lead = system.actorOf(Props(new LeadFlightAttendant with AttendantCreationPolicy),
     system.settings.config.getString("com.alangeorge.scala.actorplay.avionics.flightcrew.leadAttendantName"))
   Thread.sleep(2000)
-  system.shutdown()
+  system.terminate()
 }

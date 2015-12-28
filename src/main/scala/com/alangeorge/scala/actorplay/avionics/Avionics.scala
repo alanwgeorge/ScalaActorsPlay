@@ -28,7 +28,7 @@ object Avionics {
       control ! ControlSurfaces.StickBack(0f)
     }
     system.scheduler.scheduleOnce(15.seconds) {
-      system.shutdown()
+      system.terminate()
     }
   }
 }
