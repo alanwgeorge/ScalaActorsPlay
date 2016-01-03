@@ -59,7 +59,7 @@ trait FishingQueue[T] {
     recv
   }
 
-  def receiveOne(max: Duration): T = {
+  private def receiveOne(max: Duration): T = {
       if (max == 0.seconds) {
         queue.pollFirst
       } else if (max.isFinite) {
@@ -69,7 +69,7 @@ trait FishingQueue[T] {
       }
   }
 
-  def now: FiniteDuration = System.nanoTime.nanos
+  private def now: FiniteDuration = System.nanoTime.nanos
 }
 
 object Fishing extends FishingQueue[Option[Animal]] with LazyLogging {

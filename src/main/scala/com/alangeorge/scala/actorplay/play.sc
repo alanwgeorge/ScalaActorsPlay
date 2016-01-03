@@ -23,3 +23,11 @@ f.isCompleted
 import java.util._
 
 println(new Locale("ES"))
+
+class Foo {
+  def apply(i:Int) = println(s"hello: $i")
+}
+
+val foo = new Foo
+
+foo(3)
