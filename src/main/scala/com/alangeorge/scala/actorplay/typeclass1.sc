@@ -1,3 +1,5 @@
+
+// ref: http://like-a-boss.net/2013/03/29/typeclasses-in-scala.html
 trait Animal {
   def makeSound: String
 }
@@ -34,9 +36,14 @@ object OffSpringName {
 }
 
 import OffSpringName._
+
+import scala.language.reflectiveCalls
+
 (new Cat).offSpring
 (new Dog).offSpring
 //1.offSpring
 
 implicitly[OffSpringName[Cat]].offSpringName(new Cat)
 implicitly[Ordering[String]]
+
+
